@@ -54,7 +54,6 @@ ui <- fluidPage(
         sidebarPanel(
             
         ),
-
         # Show a plot of the generated distribution
         mainPanel(
             tabsetPanel(type = "tabs",
@@ -124,8 +123,10 @@ server <- function(input, output) {
         # result
         return(y)
     }
+    
     # lower case using try.error with sapply 
     tweetPsbb = sapply(tweetPsbb, try.error)
+    
     # remove NAs in some_txt
     tweetPsbb = tweetPsbb[!is.na(tweetPsbb)]
     names(tweetPsbb) = NULL
@@ -135,6 +136,7 @@ server <- function(input, output) {
     tidy_tweet <- tweetPsbb %>%
         unnest_tokens(word, tweetPsbb) %>%
         anti_join(stop_words)
+    
     
     # Data Clustering with nrc
     nrc_psbb <- tidy_tweet %>%
@@ -146,21 +148,15 @@ server <- function(input, output) {
         inner_join(get_sentiments("bing")) %>%
         count(sentiment, word, sort = TRUE)
     
-   
+    # Output Plot Analisis Sentimen
     output$nrcPlot <- renderPlot({
         ggplot(data = nrc_psbb) +
             geom_col(aes(n,sentiment, color = sentiment, fill = sentiment)) +
-            labs(x = "Jumlah Kata dalam Tweet", y = "Kategori mosi") +
+            labs(x = "Jumlah Kata dalam Tweet", y = "Kategori Emosi") +
             ggtitle("Sentiment Analisis emosi terhadap PSBB")
     })
     
-    # output$bingPlot <- renderPlot({
-    #     ggplot(data = bing_word_counts) +
-    #         geom_col(aes(n,sentiment,fill = ),show.legend = FALSE) +
-    #         labs(y = "Contribution to sentiment", x = NULL) +
-    #         coord_flip() +
-    #         ggtitle("Sentimen Analisis polaritas terhadap PSBB" )
-    # })
+    # Output Plot Analisis Polaritas
     output$bingPlot <- renderPlot({
         ggplot(bing_word_counts, aes(x=sentiment)) +
             geom_bar(aes(y=..count.., fill=sentiment)) +
