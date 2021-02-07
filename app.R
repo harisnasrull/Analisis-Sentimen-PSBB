@@ -69,9 +69,18 @@ ui <- fluidPage(
 server <- function(input, output) {
     
     # Crawling data from twitter
-    psbb <- searchTwitter("psbb",n = 100, lang = "en")
-    psbb <- twListToDF(psbb)
-    tweetPsbb <- psbb$text
+    # psbb <- searchTwitter("psbb",n = 1000)
+    # psbb <- twListToDF(psbb)
+    # tweetPsbb <- psbb$text
+    
+    # Data di ekspor terlebih dahulu untuk diterjemahkan ke bahasa Inggris
+    # write.csv(tweetPsbb,"tweetIndo.csv",row.names = FALSE)
+    
+    # Setelah di ekspor lalu file save as .xlsx
+    # Terjemahkan data dari Bahasa Indonesia ke bahasa Inggris dengan link https://www.onlinedoctranslator.com/id/translationform
+    # Membaca data yang sudah diterjemahkan dalam bentuk csv
+    tweetPsbb <- read.csv("tweetIndo.id.en.csv")
+    tweetPsbb <- tweetPsbb$tweets.of.Psbb
     
     # Prepocessing data
     # remove url
@@ -135,28 +144,30 @@ server <- function(input, output) {
     # Data Clustering with bing
     bing_word_counts <- tidy_tweet %>%
         inner_join(get_sentiments("bing")) %>%
-        count(sentiment, word, sort = TRUE) %>%
-        group_by(sentiment)
+        count(sentiment, word, sort = TRUE)
     
-    library(plyr)
-    bing_word_counts <- ddply(bing_word_counts, .(sentiment), summarise, n = sum(n))
-    
+   
     output$nrcPlot <- renderPlot({
         ggplot(data = nrc_psbb) +
             geom_col(aes(n,sentiment, color = sentiment, fill = sentiment)) +
-            labs(x = "Jumlah tweet", y = "Kategori emosi") +
+            labs(x = "Jumlah Kata dalam Tweet", y = "Kategori mosi") +
             ggtitle("Sentiment Analisis emosi terhadap PSBB")
     })
     
+    # output$bingPlot <- renderPlot({
+    #     ggplot(data = bing_word_counts) +
+    #         geom_col(aes(n,sentiment,fill = ),show.legend = FALSE) +
+    #         labs(y = "Contribution to sentiment", x = NULL) +
+    #         coord_flip() +
+    #         ggtitle("Sentimen Analisis polaritas terhadap PSBB" )
+    # })
     output$bingPlot <- renderPlot({
-        ggplot(data = bing_word_counts) +
-            geom_col(aes(n,sentiment,fill = ),show.legend = FALSE) +
-            labs(y = "Contribution to sentiment", x = NULL) +
-            coord_flip() +
-            ggtitle("Sentimen Analisis polaritas terhadap PSBB" )
+        ggplot(bing_word_counts, aes(x=sentiment)) +
+            geom_bar(aes(y=..count.., fill=sentiment)) +
+            scale_fill_brewer(palette = "RdGy") +
+            ggtitle("Sentiment Analisis Polaritas terhadap PSBB") +
+            labs(x="polaritas", y="banyak Tweets")
     })
-    
-
 }
 
 # Run the application 
